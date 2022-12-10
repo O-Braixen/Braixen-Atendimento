@@ -2,6 +2,8 @@ import discord
 from discord import app_commands
 from discord.ext import commands
 
+#Codigo desenvolvido pelo O Braixen#0654 usando o apendizado do curso dominando o discord
+
         #Variaveis Necessarias
 donoid = 1111111111 #Coloque sua ID para indicar que você é o dono do bot
 id_cargo_atendente = 1111111111 #Coloque aqui o ID do cargo de atendente do primeiro servidor
