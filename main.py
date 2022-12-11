@@ -1,5 +1,6 @@
-import discord
-from discord import app_commands
+import discord,os
+from datetime import datetime
+from discord import app_commands,utils
 from discord.ext import commands
 
 #Codigo desenvolvido pelo O Braixen#0654 usando o apendizado do curso dominando o discord
@@ -10,6 +11,10 @@ id_cargo_atendente = 1111111111 #Coloque aqui o ID do cargo de atendente do prim
 id_cargo_tribunal = 1111111111 #Coloque aqui o ID do cargo de atendente do segundo servidor
 id_categoria_staff = 1111111111 #Coloque aqui o ID da caregoria onde deseja que os tickets sejam criados (para primeiro servidor)
 id_categoria_tribunal = 1111111111 #Coloque aqui o ID da caregoria onde deseja que os tickets sejam criados (para Segundo servidor)
+id_servidor_bh = 1111111111 #ID do primeiro servidor
+id_servidor_tribunal= 1111111111 #ID do segundo servidor
+id_canal_logs_bh = 1111111111 #ID do canal de logs do primeiro servidor
+id_canal_logs_tri= 1111111111 #ID do canal de logs do segundo servidor
 token_bot = 'SEU_LINDO_TOKEN_AQUI' #Coloque aqui seu Token do BOT | OBS: Não compartilhe em hipótese alguma o Token
 
 #Variaveis de USO GLOBAL| Se Quiser editar só edite o emojiglobal blz, o resto deixe do jeito que está
@@ -310,7 +315,7 @@ class DeleteTicket(discord.ui.View):
         super().__init__(timeout=300)
         self.value=None
 
-    @discord.ui.button(label="Encerrar Ticket",style=discord.ButtonStyle.red,emoji="🦊")#ESPECIFICAÇÂO DO BOTÂO
+    @discord.ui.button(label="Encerrar Ticket",style=discord.ButtonStyle.red,emoji="🦊") #ESPECIFICAÇÂO DO BOTÂO
     async def confirm(self,interaction: discord.Interaction, button: discord.ui.Button):
         self.value = True
         self.stop()
@@ -321,7 +326,29 @@ class DeleteTicket(discord.ui.View):
         # esse IF verifica se quem ta apertando o botão ou é o cara que abriu o ticket ou o mod do primeiro servidor ou do segundo servidor.
         if str(interaction.user.id) in interaction.channel.name or mod in interaction.user.roles or mod2 in interaction.user.roles:
             #se é verdadeiro encerra o atendimento e deleta o ticker
-                await interaction.channel.send(f"Encerrando o seu atendimento...")
+                await interaction.channel.send(f"Okay estamos salvando o seu atendimento...")
+                await interaction.response.defer()
+                await interaction.followup.send("Seu Atendimento foi encerrado...")
+                if os.path.exists(f"{interaction.channel.id}.md"):
+                    return await interaction.followup.send(f"Uma transcrição já está sendo gerada!", ephemeral = True)
+                with open(f"{interaction.channel.id}.md", 'a',encoding="utf-8") as f: #abre um arquivo .md para escrever nele
+                    f.write(f"# Transcrição de {interaction.channel.name}:\n\n")
+                    async for message in interaction.channel.history(limit = None, oldest_first = True):
+                        created = datetime.strftime(message.created_at, "%d/%m/%Y ás %H:%M:%S")
+                        if message.edited_at:
+                            edited = datetime.strftime(message.edited_at, "%d/%m/%Y ás %H:%M:%S")
+                            f.write(f"{message.author} on {created}: {message.clean_content} (Editado em {edited})\n")
+                        else:
+                            f.write(f"{message.author} on {created}: {message.clean_content}\n")
+                    generated = datetime.now().strftime("%d/%m/%Y ás %H:%M:%S")
+                    f.write(f"\n*Gerado em {generated}\n*Time Zone: UTC*")
+                with open(f"{interaction.channel.id}.md", 'rb') as f:
+                    if interaction.guild.id == id_servidor_bh: #esse IF verifica de qual servidor é rodado e indica o canal de logs ideal 
+                        canal_logs = interaction.guild.get_channel(id_canal_logs_bh)
+                    else:
+                        canal_logs = interaction.guild.get_channel(id_canal_logs_tri)
+                    await canal_logs.send(file = discord.File(f, f"{interaction.channel.name}.md"))
+                os.remove(f"{interaction.channel.id}.md")
                 await interaction.channel.delete()
         else:
             # se falso manda isso ai em baixo
@@ -463,7 +490,7 @@ async def _adicionar(interaction: discord.Interaction,membro: discord.Member):
     if str(interaction.user.id) in interaction.channel.name or mod in interaction.user.roles or mod2 in interaction.user.roles:
         resposta = discord.Embed(
             colour=discord.Color.green(),
-            title="🦊 ⠂ Adicionado ao atendimento",
+            title="🦊⠂Adicionado ao atendimento",
             description=f"Membro: {membro.mention} foi adicionado ao atendimento"
         )
         await interaction.response.send_message(embed=resposta)
@@ -481,7 +508,7 @@ async def _remover(interaction: discord.Interaction,membro: discord.Member):
     if str(interaction.user.id) in interaction.channel.name or mod in interaction.user.roles or mod2 in interaction.user.roles:
         resposta = discord.Embed(
             colour=discord.Color.red(),
-            title="🦊 ⠂ Removeu do atendimento",
+            title="🦊⠂Removeu do atendimento",
             description=f"Membro: {membro.mention} foi removido do atendimento"
         )
         await interaction.response.send_message(embed=resposta)
@@ -503,13 +530,13 @@ async def _say(interaction: discord.Interaction, mensagem: str):
         
                 #COMANDO BAN
         #comandinho de banimento padrão
-@tree.command(name="ban",description='Banir um membro do servidor')
+@tree.command(name="user_banir",description='Banir um membro do servidor')
 @commands.has_permissions(ban_members=True)
 async def _ban(interaction: discord.Interaction, membro: discord.Member, razão: str):
     if interaction.permissions.ban_members:
         resposta = discord.Embed(
             colour=discord.Color.red(),
-            title="🦊 ⠂ Banido",
+            title="🦊⠂Banido",
             description=f"Membro: {membro}\nRazão: {razão}"
         )
         await membro.ban(reason=razão)
@@ -519,13 +546,13 @@ async def _ban(interaction: discord.Interaction, membro: discord.Member, razão:
 
                 #COMANDO ADD ROLE
         #comandinho de Adicionar cargo a um membro padrão
-@tree.command(name="cargo_adicionar",description='Adiciona um cargo a um membro')
+@tree.command(name="user_cargo_adicionar",description='Adiciona um cargo a um membro')
 @commands.has_permissions(manage_roles=True)
 async def _roleadd(interaction: discord.Interaction, membro: discord.Member, cargo: discord.Role):
     if interaction.permissions.manage_roles:
         resposta = discord.Embed(
             colour=discord.Color.yellow(),
-            title="🦊 ⠂ Cargo Adicionado",
+            title="🦊⠂Cargo Adicionado",
             description=f"Membro: {membro.mention}\nCargo: {cargo}"
         )
         await membro.add_roles(cargo)
@@ -535,17 +562,60 @@ async def _roleadd(interaction: discord.Interaction, membro: discord.Member, car
 
                 #COMANDO REM ROL
         #comandinho de remover cargo de um membro padrão
-@tree.command(name="cargo_remover",description='Adiciona um cargo a um membro')
+@tree.command(name="user_cargo_remover",description='Adiciona um cargo a um membro')
 @commands.has_permissions(manage_roles=True)
 async def _rolerem(interaction: discord.Interaction, membro: discord.Member, cargo: discord.Role):
     if interaction.permissions.manage_roles:
         resposta = discord.Embed(
             colour=discord.Color.yellow(),
-            title="🦊 ⠂ Cargo Removido",
+            title="🦊⠂Cargo Removido",
             description=f"Membro: {membro.mention}\nCargo: {cargo}"
         )
         await membro.remove_roles(cargo)
         await interaction.response.send_message(embed=resposta)
+    else: await interaction.response.send_message(mensagemerro,ephemeral=True)
+
+                #COMANDO USER INFO
+        #comandinho de User Info para consultar informações do usuario padrão
+@tree.command(name="user_info",description='Verifica as informações de um membro')
+async def _userinfo(interaction: discord.Interaction, membro: discord.Member=None):
+    if membro == None:
+        membro = interaction.user
+    resposta = discord.Embed(
+            colour=discord.Color.yellow(),
+            description=f"**🗄️⠂Informações de {membro.name}**"
+        )
+    resposta.set_thumbnail(url=f"{membro.avatar}")
+    resposta.add_field(name="🪪⠂Nome", value=f"`{membro.display_name}#{membro.discriminator}`", inline=True)
+    resposta.add_field(name="🆔⠂ID", value=f"`{membro.id}`", inline=True)
+    resposta.add_field(name="🦊⠂menção", value=membro.mention, inline=True)
+    resposta.add_field(name="📅⠂Entrou no servidor", value=datetime.strftime(membro.joined_at, "%d/%m/%Y"), inline=True)
+    resposta.add_field(name="👋⠂Entrou no discord", value=datetime.strftime(membro.created_at, "%d/%m/%Y"), inline=True)
+    resposta.add_field(name=f"💼⠂Cargos ({len(membro.roles) - 1})", value='\n • '.join([role.name for role in membro.roles]), inline=True)
+    await interaction.response.send_message(embed=resposta)
+
+                #COMANDO USER AVATAR
+        #comandinho de User avatar para mostrar o avatar do usuario padrão
+@tree.command(name="user_avatar",description='exibe o avatar de um membro')
+async def _useravatar(interaction: discord.Interaction, membro: discord.Member=None):
+    if membro == None:
+        membro = interaction.user
+    resposta = discord.Embed(
+            colour=discord.Color.yellow()
+        )
+    resposta.set_image(url=f"{membro.avatar}")
+    view = discord.ui.View()
+    item = discord.ui.Button(style=discord.ButtonStyle.blurple,label="abrir em navegador",url=f"{membro.avatar.url}")
+    view.add_item(item=item)
+    await interaction.response.send_message(embed=resposta,view=view)
+
+                #COMANDO DELETE CHANNEL
+        #comando para deletar um canal, verificação via IF necessario gerenciar canais
+@tree.command(name="canal_delete",description='Deleta um canal existente')
+async def _deletechannel(interaction: discord.Interaction):
+    if interaction.permissions.manage_channels:
+        await interaction.response.send_message("bye bye channel...")
+        await interaction.channel.delete()
     else: await interaction.response.send_message(mensagemerro,ephemeral=True)
 
 
