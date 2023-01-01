@@ -10,7 +10,13 @@ Todas os comandos estão com comentarios e explicados para facil modificação e
  - 3 Paineis de Dropdown (2 para um servidor e 1 para um segundo servidor);
  - Suporte aos paineis serem persistentes;
  - Adicionado suporte para salvar chat ao fechar ticket
- - Suporte a context_menu para abrir ticket
+ - Suporte a context_menu para alguns comandos
+ - suporte a .env adicionado
+
+**Lista dos comandos de context menu**
+ - Avatar
+ - Usuario info
+ - Abrir Ticket
 
 **Lista dos comandos**
 
@@ -22,12 +28,16 @@ Todas os comandos estão com comentarios e explicados para facil modificação e
 - /atendimento_adicionar
 - /atendimento_remover
 - /say
+- /ping
+- /bot_info
 - /user_banir
 - /user_cargo_adicionar
 - /user_cargo_remover
 - /user_info
 - /user_avatar
+- /cargo
 - /canal_delete
+- /limpar_chat
 
 **Variaveis exigidas**
 
@@ -40,4 +50,4 @@ Todas os comandos estão com comentarios e explicados para facil modificação e
 - id_servidor_tribunal
 - id_canal_logs_bh
 - id_canal_logs_tri
-- token_bot
+- token_bot (Via .env)

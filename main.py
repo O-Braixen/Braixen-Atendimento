@@ -2,20 +2,27 @@ import discord,os
 from datetime import datetime
 from discord import app_commands,utils
 from discord.ext import commands
+from dotenv import load_dotenv
 
 #Codigo desenvolvido pelo O Braixen#0654 usando o apendizado do curso dominando o discord
 
         #Variaveis Necessarias
+load_dotenv()
+token_bot = os.getenv("DISCORD_TOKEN")
 donoid = 1111111111 #Coloque sua ID para indicar que você é o dono do bot
+
+#Parte do primeiro servidor
 id_cargo_atendente = 1111111111 #Coloque aqui o ID do cargo de atendente do primeiro servidor
-id_cargo_tribunal = 1111111111 #Coloque aqui o ID do cargo de atendente do segundo servidor
 id_categoria_staff = 1111111111 #Coloque aqui o ID da caregoria onde deseja que os tickets sejam criados (para primeiro servidor)
-id_categoria_tribunal = 1111111111 #Coloque aqui o ID da caregoria onde deseja que os tickets sejam criados (para Segundo servidor)
 id_servidor_bh = 1111111111 #ID do primeiro servidor
-id_servidor_tribunal= 1111111111 #ID do segundo servidor
 id_canal_logs_bh = 1111111111 #ID do canal de logs do primeiro servidor
+
+#Parte do Segundo servidor
+id_cargo_tribunal = 1111111111 #Coloque aqui o ID do cargo de atendente do segundo servidor
+id_categoria_tribunal = 1111111111 #Coloque aqui o ID da caregoria onde deseja que os tickets sejam criados (para Segundo servidor)
+id_servidor_tribunal= 1111111111 #ID do segundo servidor
 id_canal_logs_tri= 1111111111 #ID do canal de logs do segundo servidor
-token_bot = 'SEU_LINDO_TOKEN_AQUI' #Coloque aqui seu Token do BOT | OBS: Não compartilhe em hipótese alguma o Token
+
 
 #Variaveis de USO GLOBAL| Se Quiser editar só edite o emojiglobal blz, o resto deixe do jeito que está
 emojiglobal = "🦊"
@@ -354,6 +361,9 @@ class DeleteTicket(discord.ui.View):
             # se falso manda isso ai em baixo
             await interaction.response.send_message("Ue? Isso não funcionou como deveria...")
 
+                
+                
+                
                 #PARTE QUE LIGA O BOT DE FATO
 class client(discord.Client):
     def __init__(self):
@@ -367,17 +377,27 @@ class client(discord.Client):
     
 
     async def on_ready(self):
+        global botimg
+        global botname
+        global botping
+        global botid
         await self.wait_until_ready()
         await self.change_presence(activity=discord.Activity(type=discord.ActivityType.watching, name="Braixen's House")) #atualiza o status que é exibido no bot
         if not self.synced: #Checar se os comandos slash foram sincronizados 
             #await tree.sync(guild = discord.Object(id=id_do_servidor)) # Você também pode deixar o id do servidor em branco para aplicar em todos servidores, mas isso fará com que demore de 1~24 horas para funcionar.
             await tree.sync() # isso aqui é para comandos globais, necessario para multiplos servidores
             self.synced = True
-        print(f"Entramos como {self.user}.") 
+        print(f"Entramos como {self.user}.")
+        botimg = self.user.avatar.url
+        botname = self.user.name
+        botping = self.latency
+        botid = self.user.id
 
 aclient = client()
 tree = app_commands.CommandTree(aclient)
 
+                
+                
                 #PARTE DOS COMANDOS POR SLASH /
 
 #Variaveis adicionais
@@ -418,8 +438,10 @@ async def setup(interaction: discord.Interaction):
     )
     #imagem do meu embed
     embed1.set_image(url="https://cdn.discordapp.com/attachments/774046644114030632/1046881160174772345/Tickets.png")
-
-    await interaction.channel.send(embed=embed1,view=DropdownView()) 
+    if interaction.permissions.manage_guild:#Verifica a permissão de quem ta usando o comando, somente gerenciadores de servidor podem usar
+        await interaction.response.send_message("Painel criado",ephemeral=True)#responde confirmando a criação da mensagem
+        await interaction.channel.send(embed=embed1,view=DropdownView()) #envia a mensagem
+    else:await interaction.response.send_message(mensagemerro,ephemeral=True)#retorna erro se a condição não for valida
 
 
                 #PAINEL DE SERVIÇOS DO BRAIXEN'S HOUSE
@@ -436,8 +458,10 @@ async def setup2(interaction: discord.Interaction):
     )
     #imagem do meu embed
     embed2.set_image(url="https://cdn.discordapp.com/attachments/774046644114030632/970451269179306034/contrate.png")
-
-    await interaction.channel.send(embed=embed2,view=DropdownView2()) 
+    if interaction.permissions.manage_guild: #Verifica a permissão de quem ta usando o comando, somente gerenciadores de servidor podem usar
+        await interaction.response.send_message("Painel criado",ephemeral=True)#responde confirmando a criação da mensagem
+        await interaction.channel.send(embed=embed2,view=DropdownView2())#envia a mensagem
+    else:await interaction.response.send_message(mensagemerro,ephemeral=True)#retorna erro se a condição não for valida
 
                 #PAINEL DO TRIBUNAL DO BRAIXEN'S HOUSE
         #mesmo do de cima 
@@ -452,8 +476,10 @@ async def setup2(interaction: discord.Interaction):
     )
     #imagem do meu embed
     embed3.set_image(url="https://cdn.discordapp.com/attachments/774046644114030632/1046865780924489848/Tribunal.png")
-
-    await interaction.channel.send(embed=embed3,view=DropdownView3()) 
+    if interaction.permissions.manage_guild:
+        await interaction.response.send_message("Painel criado",ephemeral=True)
+        await interaction.channel.send(embed=embed3,view=DropdownView3()) 
+    else:await interaction.response.send_message(mensagemerro,ephemeral=True)
 
                 #COMANDO PARA FECHAR UM TICKET
         #esse cara manda um texto e manda junto o botão de fechar ticket 
@@ -527,7 +553,33 @@ async def _say(interaction: discord.Interaction, mensagem: str):
     else:
         await interaction.response.send_message(mensagemerro,ephemeral=True)
 
-        
+                #COMANDO PING
+@tree.command(name="ping",description='Pinga com o bot e verifica sua conexão')
+async def _ping(interaction: discord.Interaction):
+    resposta = discord.Embed(
+            colour=discord.Color.yellow(),
+            title="🏓⠂Pong",
+            description=f"Latencia: `{round(botping * 1000)}`ms."
+        )
+    await interaction.response.send_message(embed=resposta)
+
+                #COMANDO INFO BOT
+@tree.command(name="bot_info",description='Exibe informações sobre o bot')
+async def _botinfo(interaction: discord.Interaction):
+    resposta = discord.Embed(
+            colour=discord.Color.yellow(),
+            description="🦊⠂Informações"
+        )
+    resposta.set_thumbnail(url=f"{botimg}")
+    resposta.add_field(name="🪪⠂Nome", value=f"`{botname}`", inline=True)
+    resposta.add_field(name="🤖⠂Prefixo", value=f"Slash `/`", inline=True)
+    resposta.add_field(name="🔮⠂Menção", value=f"<@{botid}>", inline=True)
+    resposta.add_field(name="🦊⠂Dono", value=f"<@{donoid}>", inline=True)
+    resposta.add_field(name="🏓⠂Ping", value=f"`{round(botping * 1000)}`ms.", inline=True)
+
+    await interaction.response.send_message(embed=resposta)
+
+
                 #COMANDO BAN
         #comandinho de banimento padrão
 @tree.command(name="user_banir",description='Banir um membro do servidor')
@@ -591,8 +643,29 @@ async def _userinfo(interaction: discord.Interaction, membro: discord.Member=Non
     resposta.add_field(name="🦊⠂menção", value=membro.mention, inline=True)
     resposta.add_field(name="📅⠂Entrou no servidor", value=datetime.strftime(membro.joined_at, "%d/%m/%Y"), inline=True)
     resposta.add_field(name="👋⠂Entrou no discord", value=datetime.strftime(membro.created_at, "%d/%m/%Y"), inline=True)
-    resposta.add_field(name=f"💼⠂Cargos ({len(membro.roles) - 1})", value='\n • '.join([role.name for role in membro.roles]), inline=True)
+    if len(membro.roles) == 1:
+        resposta.add_field(name=f"💼⠂Cargos ({len(membro.roles) - 1})", value="🦊⠂Sem cargos", inline=False)
+    else:resposta.add_field(name=f"💼⠂Cargos ({len(membro.roles) - 1})", value='\n • '.join([role.mention for role in membro.roles if role.name != '@everyone']), inline=False)
     await interaction.response.send_message(embed=resposta)
+
+                #COMANDO USER INFO por menu
+@tree.context_menu(name= "Usuario info")
+async def _userinfomenu(interaction: discord.Interaction, membro: discord.Member):
+    resposta = discord.Embed(
+            colour=discord.Color.yellow(),
+            description=f"**🗄️⠂Informações de {membro.name}**"
+        )
+    resposta.set_thumbnail(url=f"{membro.avatar}")
+    resposta.add_field(name="🪪⠂Nome", value=f"`{membro.name}#{membro.discriminator}`", inline=True)
+    resposta.add_field(name="🆔⠂ID", value=f"`{membro.id}`", inline=True)
+    resposta.add_field(name="🦊⠂menção", value=membro.mention, inline=True)
+    resposta.add_field(name="📅⠂Entrou no servidor", value=datetime.strftime(membro.joined_at, "%d/%m/%Y"), inline=True)
+    resposta.add_field(name="👋⠂Entrou no discord", value=datetime.strftime(membro.created_at, "%d/%m/%Y"), inline=True)
+    if len(membro.roles) == 1:
+        resposta.add_field(name=f"💼⠂Cargos ({len(membro.roles) - 1})", value="🦊⠂Sem cargos", inline=False)
+    else:resposta.add_field(name=f"💼⠂Cargos ({len(membro.roles) - 1})", value='\n • '.join([role.mention for role in membro.roles if role.name != '@everyone']), inline=False)
+    await interaction.response.send_message(ephemeral=True,embed=resposta)
+
 
                 #COMANDO USER AVATAR
         #comandinho de User avatar para mostrar o avatar do usuario padrão
@@ -609,6 +682,42 @@ async def _useravatar(interaction: discord.Interaction, membro: discord.Member=N
     view.add_item(item=item)
     await interaction.response.send_message(embed=resposta,view=view)
 
+                #COMANDO USER AVATAR POR MENU
+@tree.context_menu(name= "Avatar")
+async def _useravatarmenu(interaction: discord.Interaction, membro: discord.Member):
+    if membro == None:
+        membro = interaction.user
+    resposta = discord.Embed(
+            colour=discord.Color.yellow()
+        )
+    resposta.set_image(url=f"{membro.avatar}")
+    view = discord.ui.View()
+    item = discord.ui.Button(style=discord.ButtonStyle.blurple,label="abrir em navegador",url=f"{membro.avatar.url}")
+    view.add_item(item=item)
+    await interaction.response.send_message(ephemeral=True,embed=resposta,view=view)
+
+                #COMANDO CARGO INFO
+@tree.command(name="cargo",description='Verifica as informações de um cargo')
+async def _roleinfo(interaction: discord.Interaction, cargo: discord.Role):
+    resposta = discord.Embed( 
+        colour=cargo.color,
+        description=f"**📂⠂Informações de {cargo.name}**"
+    )
+    if cargo.mentionable is True:
+        mençãocargo = "✅"
+    else: mençãocargo = "❌"
+    if cargo.hoist is True:
+        cargoseparado = "✅"
+    else: cargoseparado = "❌"
+    resposta.set_thumbnail(url=cargo.icon)
+    resposta.add_field(name="🪪⠂Nome", value=f"`{cargo.name}`", inline=True)
+    resposta.add_field(name="🆔⠂ID", value=f"`{cargo.id}`", inline=True)
+    resposta.add_field(name="🦊⠂menção", value=cargo.mention, inline=True)
+    resposta.add_field(name="📅⠂Criado em", value=datetime.strftime(cargo.created_at, "%d/%m/%Y"), inline=True)
+    resposta.add_field(name=f"⚙️⠂Especificações", value=f"É Mensionável: {mençãocargo}\n É Separado: {cargoseparado}", inline=True)
+    await interaction.response.send_message(embed=resposta)
+
+
                 #COMANDO DELETE CHANNEL
         #comando para deletar um canal, verificação via IF necessario gerenciar canais
 @tree.command(name="canal_delete",description='Deleta um canal existente')
@@ -616,6 +725,15 @@ async def _deletechannel(interaction: discord.Interaction):
     if interaction.permissions.manage_channels:
         await interaction.response.send_message("bye bye channel...")
         await interaction.channel.delete()
+    else: await interaction.response.send_message(mensagemerro,ephemeral=True)
+
+                
+                #COMANDO PRUNE CHANNEL
+@tree.command(name="limpar_chat",description='Limpa as mensagems de um canal')
+async def _prunechannel(interaction: discord.Interaction, quantidade:int):
+    if interaction.permissions.manage_channels:
+        await interaction.response.send_message("<:stick:969703475720126464> - Limpando o chat...",ephemeral=True)
+        await interaction.channel.purge(limit=quantidade)
     else: await interaction.response.send_message(mensagemerro,ephemeral=True)
 
 
