@@ -3,7 +3,9 @@
 ![bot image](img/Braixen%20Atendimento.jpg)
 
 
-ESSE REPOSITORIO FOI FECHADO POIS O BOT DE ATENDIMENTO FOI MIGRADO PARA UM NOVO MODELO COM COGS, CONHEÇA O [BRIX](https://github.com/O-Braixen/Brix).
+**ESSE REPOSITORIO FOI FECHADO POIS O BOT DE ATENDIMENTO FOI MIGRADO PARA UM NOVO MODELO COM COGS, CONHEÇA O [BRIX](https://github.com/O-Braixen/Brix).**
+
+
 codigo em Python do Bot de atendimento do Braixen's House
 
 Esse codigo foi desenvolvido a partir do curso do Dominado o discord do [Youtuber Dune](https://www.youtube.com/@DuneDiscord) e modificado para atender aos requisitos da comunidade [Braixen's House](https://discord.gg/ZRHwWydQFu)
