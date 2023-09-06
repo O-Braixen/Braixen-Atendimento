@@ -1,4 +1,6 @@
 # Braixen-Atendimento
+
+ESSE REPOSITORIO FOI FECHADO POIS O BOT DE ATENDIMENTO FOI MIGRADO PARA UM NOVO MODELO COM COGS, ACOMPANHE [BRIX](https://github.com/O-Braixen/Brix) O Novo BOT Multitarefas
 ![bot image](img/Braixen%20Atendimento.jpg)
 
 
